@@ -77,6 +77,7 @@ levels(df$DayFactor)
  
 # Display burn treatments in set order: Control, Wet, Dry
 df$Burn.trtmt = ordered(df$Burn.trtmt,levels=c("control","wet burn","dry burn"))
+df$Incubation.trtmt = ordered(df$Incubation.trtmt, levels = c("SI", "LIwA", "LIn"))
 
 # Removing sample that fell on floor post burn treatment
 df <- subset(df, Core.ID != "19UW-WB-11-02")
@@ -219,11 +220,14 @@ colnames(df)
 df <- df %>%
   mutate(C.CO2.absorbed.per.mg.per.day = C.CO2.absorbed.per.gram.per.day * 1000) %>%
   mutate(C.CO2.absorbed.per.mg.cum = C.CO2.absorbed.per.gram.cum)
-  
+
 # Make Site numeric
 colnames(df)
 class(df$Site)
 df$Site <- as.numeric(df$Site)
+
+labels <- c("dry burn" = "High Severity \nTreatment", "wet burn" = "Low Severity \nTreatment", "control" = "Control")
+labels
 
 # Create an SI dataframe
 df_SI<- df %>%
@@ -236,15 +240,22 @@ df_LI <- df %>%
 palette = c("black","orange","red3")
 
 
-# Rate of microbial respiration by day - short-term incubations
-p1 = ggplot(df_SI, aes(x = Day, 
+# Pull out site 2
+df_SI2 <- subset(df_SI, Site == 2)
+df_LI2 <- subset(df_LI, Site == 2)
+df_2 <- subset(df, Site == 2)
+
+
+
+# Rate of microbial respiration by day - short-term incubations, SITE 2
+p1 = ggplot(df_SI2, aes(x = Day, 
                    y = C.CO2.absorbed.per.mg.per.day, 
                    color = Burn.trtmt, 
                    group = Core.ID.full)) +
   geom_point() +
   geom_line(aes()) +
   scale_color_manual(values = palette) +
-  facet_wrap(~Site, scale = "free") +
+  facet_wrap(~Burn.trtmt, scale = "free", labeller = labeller(Burn.trtmt = labels)) +
   labs(x = "Day",
        y = expression(Microbial~respiration~rate~(g~C-CO[2]~g^{"-1"}~day^{"-1"})),
        title = "Microbial respiration during short-term incubation",
@@ -253,15 +264,85 @@ p1 = ggplot(df_SI, aes(x = Day,
         axis.title.y = element_text(size = 14),
         legend.text = element_text(size = 14),
         legend.title = element_text(size = 14),
-        title = element_text(size = 18))
+        title = element_text(size = 18),
+        strip.text = element_text(size = 14))
 p1
-#ggsave("../figures/day-vs-respiration-rate-SI.png", plot = p1, width = 12, height = 10)
+#ggsave("../figures/day-vs-respiration-rate-SI-site-2.png", plot = p1, width = 12, height = 10)
+
+
+
+# Plot time v respiration -> long-term incubation, SITE 2
+p2 = ggplot(df_LI2, aes(x = Day, 
+                        y = C.CO2.absorbed.per.mg.per.day, 
+                        color = Burn.trtmt, 
+                        group = Core.ID.full)) +
+  geom_point() +
+  geom_line(aes()) +
+  scale_color_manual(values = palette) +
+  facet_wrap(~Burn.trtmt, scale = "free", labeller = labeller(Burn.trtmt = labels)) +
+  labs(x = "Day",
+       y = expression(Microbial~respiration~rate~(g~C-CO[2]~g^{"-1"}~day^{"-1"})),
+       title = "Microbial respiration during long-term incubation",
+       color = "Burn treatment") +
+  theme(axis.title.x = element_text(size = 14), 
+        axis.title.y = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        title = element_text(size = 18),
+        strip.text = element_text(size = 14))
+p2
+#ggsave("../figures/day-vs-respiration-rate-LI-site-2.png", plot = p2, width = 12, height = 10)
+
+
+labels_ic <- c("SI" = "Short-term", "LIwA" = "Long-term \nplus autoclave", "LIn" = "Long-term \nno autoclave")
+
+df$Site <- as.factor(df$Site)
+palette <- c("red", 
+             "orange",
+             "yellow",
+             "green",
+             "blue",
+             "purple",
+             "salmon",
+             "pink",
+             "grey",
+             "brown",
+             "gold",
+             "hotpink4",
+             "wheat4",
+             "midnightblue",
+             "coral",
+             "deepskyblue",
+             "burlywood",
+             "orchid",
+             "seagreen")
+
+# Plot time vs respiration rate --> all incubations and burn treatments, SITE 2
+p3 = ggplot(df, aes(x = Day, 
+                        y = C.CO2.absorbed.per.mg.per.day, 
+                        color = Site, 
+                        group = Core.ID.full)) +
+  geom_point() +
+  geom_line(aes()) +
+  #scale_color_manual(values = palette) +
+  facet_grid(Burn.trtmt~Incubation.trtmt, labeller = labeller(Burn.trtmt = labels, Incubation.trtmt = labels_ic)) +
+  labs(x = "Day",
+       y = expression(Microbial~respiration~rate~(g~C-CO[2]~g^{"-1"}~day^{"-1"})),
+       color = "Site") +
+  theme(axis.title.x = element_text(size = 14), 
+        axis.title.y = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        title = element_text(size = 18),
+        strip.text = element_text(size = 14))
+p3
+ggsave("../figures/day-vs-respiration-rate-all-sites.png", plot = p3, width = 8, height = 8)
 
 
 
 
 # Rate of microbial respiration by day - LONG-term incubations
-p2 = ggplot(df_LI, aes(x = Day, 
+p4 = ggplot(df_LI, aes(x = Day, 
                       y = C.CO2.absorbed.per.gram.per.day, 
                       group = Core.ID.full,
                       color = Burn.trtmt)) +
@@ -278,8 +359,8 @@ p2 = ggplot(df_LI, aes(x = Day,
         legend.text = element_text(size = 14),
         legend.title = element_text(size = 14),
         title = element_text(size = 18))
-p2
-#ggsave("../figures/day-vs-respiration-rate-LI.png", plot = p2, width = 12, height = 10)
+p4
+#ggsave("../figures/day-vs-respiration-rate-LI.png", plot = p4, width = 12, height = 10)
 
 
 

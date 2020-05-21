@@ -21,6 +21,7 @@ df <-read.csv('../Temp-all-burns-decimated.csv')
 # Fix column name
 df <- rename(df, Core.ID = ï..Site_ID)
 
+df$Burn_severity <- ordered(df$Burn_severity,levels=c("Low_Sev", "High_Sev"))
 head(df)
 
 # Change time to numeric
@@ -48,7 +49,7 @@ for (i in seq_along(names.vec)) {
   df.x <- df %>%
     subset(Site == names.vec[[i]]) %>%
     subset(time_s < 21600) %>%
-    mutate(ten_s = time_s/100) %>%
+    mutate(ten_s = time_s/10) %>%
     filter(ten_s == as.integer(ten_s)) %>%
     mutate(time_min = time_s/60) %>%
     mutate(time_hr = time_min/60) 
@@ -66,8 +67,10 @@ head(output.df)
 
 # --------------------
 # PLOT
+# Format burn severity labels
+labels <- c(High_Sev = "High Severity \nTreatment", Low_Sev = "Low Severity \nTreatment")
 
-palette = c("grey0", "grey68")
+palette = c("orange2", "red3")
 
 # Plot all the temperature profiles by site
 p1 = ggplot(output.df, aes(x = time_hr, 
@@ -80,20 +83,78 @@ p1 = ggplot(output.df, aes(x = time_hr,
   labs(x = "Time from start of burn (hours)",
        y = expression(paste("Soil temperature ( ",degree ~ C, ")")),
        shape = "Position of Thermocouple",
-       color = "Burn severity treatment") + 
+       color = "Burn treatment") + 
   theme(axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14)) + 
-  scale_color_discrete(name="Burn Severity", 
-                             breaks = c('Low_Sev','High_Sev'),
-                             labels = c("Low severity","High severity")) +
-  scale_color_manual(values = palette) +
-  scale_shape_discrete(name="Depth of Thermocouple", 
-                       breaks = c('Low','Mid'),
+  scale_color_manual(values = palette,
+                     breaks = c('Low_Sev','High_Sev'),
+                     labels = c("Low severity","High severity")) +
+  scale_shape_discrete(breaks = c('Low','Mid'),
                        labels = c("Core Base","Base of organic horizon"))
 
 p1
 
-#ggsave("../../../figures/time-vs-temp-all-cores-all-sites.png", plot = p1, width = 12, height = 10)
+#ggsave("../../../figures/time-vs-temp-all-cores-all-sites.png", plot = p1, width = 8, height = 6)
+
+
+
+
+
+# Plot time vs soil temperature at SITE 2
+# Subset site 2
+df.2 <- subset(output.df, Site == c(1,3,7,12))
+
+# Plot all the temperature profiles by site
+p2 = ggplot(df.2, aes(x = time_hr, 
+                           y = Temp, 
+                           group=Core.ID, 
+                           color = Thermo_position)) +
+  geom_point() +
+  facet_grid(Burn_severity~Site, labeller = labeller(Burn_severity = labels)) +
+  labs(x = "Time from start of burn (hours)",
+       y = expression(paste("Soil temperature ( ",degree ~ C, ")")),
+       color = expression("Position of \nThermocouple")) + 
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)) + 
+  scale_color_manual(values = palette,
+                     breaks = c('Low','Mid'),
+                     labels = c("Core Base","Base of org horizon"))
+
+p2
+
+#ggsave("../../../figures/time-vs-temp-sites-1-3-7-and-12.png", plot = p2, width = 8, height = 4)
+
+
+
+
+
+# Create color palette
+palette = c("green4", "grey20")
+
+# Format burn severity labels
+labels <- c(High_Sev = "High Severity \nTreatment", Low_Sev = "Low Severity \nTreatment")
+
+# Plot
+p2 = ggplot(df.2, aes(x = time_hr, 
+                           y = Temp, 
+                           group=Core.ID, 
+                           color = Thermo_position)) +
+  geom_point() +
+  facet_wrap(~Burn_severity, labeller = labeller(Burn_severity = labels)) +
+  labs(x = "Time from start of burn (hours)",
+       y = expression(paste("Soil temperature ( ",degree ~ C, ")")),
+       color = expression(paste("Position of \nThermocouple"))) + 
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        strip.text.x = element_text(size = 14)) + 
+  scale_color_discrete(breaks = c('Low','Mid'),
+                       labels = c("Core Base","Base of organic horizon")) +
+  scale_color_manual(values = palette) 
+  
+p2
+
+
+#ggsave("../../../figures/time-vs-temp-site-1.png", plot = p2, width = 8, height = 10)
 
 
 
@@ -104,18 +165,6 @@ p1
 
 
 
-
-
-
-# Add title to plot
-p = p + ggtitle("Temperature of Core 19 during High Severity Burn") +
-  theme(plot.title = element_text(color = "black", hjust = 0.5, size = 18))
-#p = p + facet_wrap(~Site)
-P = p + geom_hline(yintercept=0,color ='black')
-#p = p + ylim(0,300)
-#p = p + xlim(0,24)
-p
- 
 #######################################
 # All the temperature profiles together:
 
