@@ -5,6 +5,10 @@
 #
 # Purpose: Script for fitting two-pool models to exponential decay data
 #           + loops
+#
+# Output:   "R_play_data/two-pool-exponential-decay-models/decay-model-coefficients.csv"
+#           "R_play_data/two-pool-exponential-decay-models/decay-model-fit.csv"
+#           plots
 
 # --------------------
 # Install package
@@ -70,7 +74,9 @@ output.fit.df <- data.frame("Core.ID" = "sample",
                             "Site" = 0,
                             "Burn.trtmt" = "trtmt",
                             "t" = 0, 
-                            "Mt" = 0, "Mt.fit" = 0)
+                            "Mt" = 0, 
+                            "Mt.fit" = 0)
+output.fit.df
 
 # Run the decay.models.R script in a for loop. 
 for (i in seq_along(names.vec)) {
@@ -101,7 +107,7 @@ for (i in seq_along(names.vec)) {
    
 }
 
-
+# works with starting coefficients: k1 = 0.00001, k2 = 0.00001, M1 = 0.9
 
 
 # --------------------
