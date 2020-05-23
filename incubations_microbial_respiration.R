@@ -317,7 +317,9 @@ palette <- c("red",
              "orchid",
              "seagreen")
 
-# Plot time vs respiration rate --> all incubations and burn treatments, SITE 2
+
+
+# Plot time vs respiration rate --> all incubations and burn treatments
 p3 = ggplot(df, aes(x = Day, 
                         y = C.CO2.absorbed.per.mg.per.day, 
                         color = Site, 
@@ -336,7 +338,7 @@ p3 = ggplot(df, aes(x = Day,
         title = element_text(size = 18),
         strip.text = element_text(size = 14))
 p3
-ggsave("../figures/day-vs-respiration-rate-all-sites.png", plot = p3, width = 8, height = 8)
+#ggsave("../figures/day-vs-respiration-rate-all-sites.png", plot = p3, width = 8, height = 8)
 
 
 
